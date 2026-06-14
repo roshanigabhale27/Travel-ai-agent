@@ -1,0 +1,305 @@
+{
+  "name": "Travel planner ai agent",
+  "nodes": [
+    {
+      "parameters": {
+        "availableInChat": true,
+        "agentName": "AI Travel Planner",
+        "agentDescription": "An AI-powered travel assistant that helps users plan trips based on destination, budget, travel dates, and preferences. It provides personalized itineraries, hotel suggestions, transportation options, estimated costs, and travel tips.",
+        "suggestedPrompts": {
+          "prompts": [
+            {
+              "text": "Plan a Goa trip for 3 days"
+            },
+            {
+              "text": "Create a budget trip to Manali"
+            },
+            {
+              "text": "Best places to visit in Mumbai"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -400,
+        -16
+      ],
+      "id": "2003e07c-9eca-403f-8377-d7dfa677d83a",
+      "name": "When chat message received",
+      "webhookId": "e59b4630-d56a-463f-9265-b9de30bb7bcf"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -416,
+        192
+      ],
+      "id": "37d2e7e3-e23f-4c3e-8655-41ca2f1f9b42",
+      "name": "Google Gemini Chat Model",
+      "notesInFlow": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "vvhFVKygtM4QiPI8",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56426c06-1cae-4831-91ec-02b0ef1fc1c6",
+              "name": "destination",
+              "value": "Goa",
+              "type": "string"
+            },
+            {
+              "id": "2b857280-9cc6-475f-9b37-a88ef2e95c72",
+              "name": "budget",
+              "value": "15000",
+              "type": "string"
+            },
+            {
+              "id": "ce7d4c37-18fd-4a50-9ebd-474ac7b88625",
+              "name": "days",
+              "value": "3",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        -16
+      ],
+      "id": "dd02d5e7-8557-4ecc-900f-aa282df66bb9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "https://wttr.in/Goa?format=j1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        368,
+        -16
+      ],
+      "id": "a89f1a60-503e-4c6d-9ba9-f73a10957b01",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1318856-8baa-468a-be12-5a8df98b93eb",
+              "name": "temperature",
+              "value": "={{$json.current_condition[0].temp_C}}",
+              "type": "string"
+            },
+            {
+              "id": "e89e709d-cdef-45ac-bb4a-e547b96a1df3",
+              "name": "humidity",
+              "value": "={{$json.current_condition[0].humidity}}",
+              "type": "string"
+            },
+            {
+              "id": "ebc35e85-cf19-43ce-8dd2-25628339fc3c",
+              "name": "weather",
+              "value": "={{$json.current_condition[0].weatherDesc[0].value}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        576,
+        -16
+      ],
+      "id": "a9a23082-891b-4409-86c1-a33e9614cc8e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "options": {
+          "timezone": "Asia/Kolkata"
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        784,
+        -16
+      ],
+      "id": "0865386d-71ea-48e1-8d26-0e065b2f7a58",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -112,
+        192
+      ],
+      "id": "c5db260c-5512-4958-972e-826338678f31",
+      "name": "Simple Memory",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        240
+      ],
+      "id": "7216f7c8-2cc6-475c-bc96-2f0eb401fe14",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "RXqGfEme1StPI1ob",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a professional AI Travel Planner.\n\nCreate beautiful, well-formatted travel plans.\n\nRules:\n- Use emojis.\n- Use clear headings.\n- Use bullet points.\n- Use tables for budget.\n- Add spacing between sections.\n- Highlight important information in bold.\n- Keep output visually attractive and easy to read.\n- Never return JSON.\n- Format exactly like a travel guide.\n\nSections:\n🌍 Trip Summary\n📅 Day Wise Itinerary\n📍 Top Attractions\n🚗 Transportation\n🏨 Hotels\n💰 Budget Breakdown\n🍽 Food Recommendations\n💡 Travel Tips\n\nUse markdown formatting."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -192,
+        -16
+      ],
+      "id": "880cc352-3f23-43cc-9c93-812b358b2bfd",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2205e48f-cfaf-48a8-aa83-77a1dbab48b8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "94156d8b8d67ec35be94c285968306e4dba58ac9b2d0b24e884095f901350c56"
+  },
+  "nodeGroups": [],
+  "id": "vA7n3Iqr9diDDP8Q",
+  "tags": []
+}
